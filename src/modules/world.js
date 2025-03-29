@@ -15,6 +15,7 @@ let starField = null; // Module-level reference for day/night cycle
 let moon = null; // Module-level reference for day/night cycle
 
 function createGround(scene) {
+  console.log("Creating ground with city size:", CITY_SIZE);
   const groundGeo = new THREE.PlaneGeometry(CITY_SIZE * 2.5, CITY_SIZE * 2.5);
   const groundMat = new THREE.MeshStandardMaterial({
     color: 0x556b2f, // Dark Greenish
@@ -26,9 +27,11 @@ function createGround(scene) {
   groundMesh.position.y = -0.1; // Place slightly below 0 to avoid z-fighting if player hits y=0
   groundMesh.receiveShadow = true;
   scene.add(groundMesh);
+  return groundMesh; // Return the mesh for reference
 }
 
 function createCityscape(scene) {
+  console.log(`Creating cityscape with ${BUILDING_COUNT} buildings...`);
   const buildingGeo = new THREE.BoxGeometry(1, 1, 1); // Unit cube
   // More varied building colors (example)
   const buildingColors = [0xaaaaaa, 0x888888, 0xbbbbbb, 0x999999, 0xcccccc];
@@ -149,14 +152,22 @@ function createStars(scene) {
   moon.visible = false; // Start invisible
   scene.add(moon);
 
-  return { starField, moon }; 
+  return { starField, moon };
 }
 
 export function createWorldElements(scene) {
-  createGround(scene);
+  if (!scene) {
+    console.error("Scene is undefined in createWorldElements");
+    return { buildingMesh: null, starField: null, moon: null };
+  }
+
+  console.log("Creating world elements with scene:", scene);
+  const ground = createGround(scene);
   const buildings = createCityscape(scene); // Get buildingMesh reference
   const skyElements = createStars(scene); // Get starField and moon references
+
   return {
+    ground,
     buildingMesh: buildings,
     starField: skyElements.starField,
     moon: skyElements.moon,

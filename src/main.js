@@ -10,7 +10,7 @@ import {
   cleanupInactivePlayers,
 } from "./modules/multiplayer.js";
 import { updateGameUI } from "./modules/ui.js";
-import { DAY_NIGHT_DURATION } from "./modules/config.js";
+import { DAY_NIGHT_DURATION, CITY_SIZE } from "./modules/config.js";
 
 // --- Module Scope Variables ---
 let scene, camera, renderer, clock;
@@ -38,13 +38,25 @@ function init() {
   hemisphereLight = sceneComponents.hemisphereLight;
   ambientLight = sceneComponents.ambientLight; // Get ambient light ref
 
-  // World Elements (Ground, City, Stars)
-  worldElements = createWorldElements(scene); // Assign returned refs
+  console.log("Scene initialized, creating world elements...");
+  try {
+    // World Elements (Ground, City, Stars)
+    worldElements = createWorldElements(scene); // Assign returned refs
+    console.log("World elements created:", worldElements);
 
-  // Player Aircraft
-  const playerComponents = createPlayerAircraft(scene);
-  playerAircraft = playerComponents.playerAircraft;
-  cameraTarget = playerComponents.cameraTarget;
+    // Player Aircraft
+    const playerComponents = createPlayerAircraft(scene);
+    playerAircraft = playerComponents.playerAircraft;
+    cameraTarget = playerComponents.cameraTarget;
+
+    // Position camera to see the scene initially
+    camera.position.set(0, 200, -500);
+    camera.lookAt(0, 0, 0);
+
+    console.log("Player aircraft created at:", playerAircraft.position);
+  } catch (error) {
+    console.error("Error during initialization:", error);
+  }
 
   // Multiplayer Connection
   connectWebSocket(scene); // Pass scene reference

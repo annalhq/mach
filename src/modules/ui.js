@@ -3,6 +3,7 @@ const speedDisplay = document.getElementById("speedDisplay");
 const altitudeDisplay = document.getElementById("altitudeDisplay");
 const playerCountDisplay = document.getElementById("playerCount");
 const connectionStatusDisplay = document.getElementById("connectionStatus");
+const debugInfoDisplay = document.getElementById("debugInfo");
 
 // Update speed and altitude display
 export function updateGameUI(speed = 0, altitude = 0) {
@@ -28,4 +29,13 @@ export function updateConnectionStatus(statusText, color = "white") {
     connectionStatusDisplay.textContent = statusText;
     connectionStatusDisplay.style.color = color;
   }
+}
+
+// New function to update debug info
+export function updateDebugInfo(message) {
+  if (debugInfoDisplay) {
+    debugInfoDisplay.textContent = message;
+  }
+  // Also log to console for debugging
+  console.log("DEBUG:", message);
 }

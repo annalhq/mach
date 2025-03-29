@@ -1,6 +1,5 @@
-// src/modules/sceneSetup.js
 import * as THREE from "three";
-import { CITY_SIZE, CAMERA_BASE_FOV } from "./config.js";
+import { CITY_SIZE, CAMERA_BASE_FOV, STAR_FIELD_RADIUS } from "./config.js";
 
 export function initializeScene() {
   const scene = new THREE.Scene();

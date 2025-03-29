@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import {
   CAMERA_BASE_FOV,
   CAMERA_MAX_FOV_INCREASE,
@@ -14,9 +15,13 @@ export function updateCamera(
   isAfterburner
 ) {
   if (!camera || !playerAircraft || !cameraTarget) {
-    // console.warn("Camera update skipped, objects not ready"); // gotta show this later on the screen, but too lazy rn lol 
+    console.warn("Camera update skipped, objects not ready");
     return;
   }
+
+  // Make sure camera is not null
+  console.log("Camera position:", camera.position);
+  console.log("Player position:", playerAircraft.position);
 
   // --- Calculate FOV based on Speed ---
   const maxSpeedForFov =
