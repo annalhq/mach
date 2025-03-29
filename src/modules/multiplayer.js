@@ -1,4 +1,3 @@
-// src/modules/multiplayer.js
 import * as THREE from "three";
 import { WEBSOCKET_URL, PLAYER_UPDATE_INTERVAL } from "./config.js";
 import { getPlayerState } from "./player.js"; // Function to get local player's state
