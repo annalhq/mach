@@ -1,4 +1,3 @@
-// src/modules/player.js
 import * as THREE from "three";
 import {
   BASE_SPEED,

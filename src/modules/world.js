@@ -1,4 +1,3 @@
-// src/modules/world.js
 import * as THREE from "three";
 import {
   CITY_SIZE,
@@ -16,7 +15,7 @@ let starField = null; // Module-level reference for day/night cycle
 let moon = null; // Module-level reference for day/night cycle
 
 function createGround(scene) {
-  const groundGeo = new THREE.PlaneGeometry(CITY_SIZE * 2.5, CITY_SIZE * 2.5); // Slightly larger ground
+  const groundGeo = new THREE.PlaneGeometry(CITY_SIZE * 2.5, CITY_SIZE * 2.5);
   const groundMat = new THREE.MeshStandardMaterial({
     color: 0x556b2f, // Dark Greenish
     roughness: 0.95,
@@ -73,7 +72,7 @@ function createCityscape(scene) {
     position.z = THREE.MathUtils.randFloatSpread(CITY_SIZE - BUILDING_SIZE_MAX);
     position.y = height / 2; // Position center at half height
 
-    quaternion.identity(); // Reset quaternion
+    quaternion.identity(); // Reset quaternion (working with quaternions, but i gotta study it in more depth, but when?)
 
     scale.set(sizeX, height, sizeZ);
 
@@ -89,7 +88,7 @@ function createCityscape(scene) {
   // buildingMesh.instanceColor.needsUpdate = true; // Needed if using setColorAt
 
   scene.add(buildingMesh);
-  return buildingMesh; // Return the reference
+  return buildingMesh;
 }
 
 function createStars(scene) {
@@ -112,7 +111,7 @@ function createStars(scene) {
       // If star is below or near horizon level
       posArray[i * 3 + 0] = x;
       posArray[i * 3 + 1] =
-        Math.abs(y) + THREE.MathUtils.randFloat(100, STAR_FIELD_RADIUS / 2); // Place it higher
+        Math.abs(y) + THREE.MathUtils.randFloat(100, STAR_FIELD_RADIUS / 2);
       posArray[i * 3 + 2] = z;
     } else {
       posArray[i * 3 + 0] = x;
@@ -141,7 +140,7 @@ function createStars(scene) {
   // Basic yellow-white, non-emissive moon
   const moonMat = new THREE.MeshBasicMaterial({ color: 0xe0e0b0 }); // Use BasicMaterial so it's visible without direct light
   moon = new THREE.Mesh(moonGeo, moonMat);
-  // Place moon far away and somewhat high
+  // Place moon far away and somewhat hehe
   moon.position.set(
     -STAR_FIELD_RADIUS * 0.4,
     STAR_FIELD_RADIUS * 0.3,
@@ -150,7 +149,7 @@ function createStars(scene) {
   moon.visible = false; // Start invisible
   scene.add(moon);
 
-  return { starField, moon }; // Return references
+  return { starField, moon }; 
 }
 
 export function createWorldElements(scene) {
