@@ -1,13 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.jpg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MachX</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/favicon.jpg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MachX</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+  <div id="info">
+    Speed: <span id="speedDisplay">0</span> km/h<br>
+    Altitude: <span id="altitudeDisplay">0</span> m<br>
+    Players: <span id="playerCount">1</span>
+  </div>
+  <div id="connectionStatus">Connecting...</div>
+  <div id="crosshair">+</div>
+  <!-- canvas injected via js hehe -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>
