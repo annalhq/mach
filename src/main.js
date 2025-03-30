@@ -105,7 +105,9 @@ function loadResources() {
 
   // --- Load Model ---
   const gltfLoader = new GLTFLoader(loadingManager);
-  const aircraftConfig = getCurrentAircraft();
+  const aircraftConfig = getCurrentAircraft(); // This will now use the stored preference
+
+  console.log(`Loading selected aircraft: ${aircraftConfig.name}`);
 
   gltfLoader.load(
     aircraftConfig.modelUrl,

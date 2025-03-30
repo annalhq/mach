@@ -21,9 +21,9 @@ export const AIRCRAFT_CONFIGS = {
     name: "F-35 Lightning II",
     description: "American stealth multirole combat aircraft",
     modelUrl: `${CONFIG.ASSETS_DIR}/jets/f35-lightning2.glb`,
-    scale: 0.04,
-    maxSpeed: CONFIG.PLAYER_SPEED * 1.1,
-    acceleration: 1.2,
+    scale: 0.09,
+    maxSpeed: CONFIG.PLAYER_SPEED * 1.3,
+    acceleration: 1.3,
     handling: 0.9,
     color: 0xdddddd,
   },
@@ -32,15 +32,24 @@ export const AIRCRAFT_CONFIGS = {
     description: "European multirole fighter",
     modelUrl: `${CONFIG.ASSETS_DIR}/jets/eurofighter_typhoon_fighter_jet.glb`,
     scale: 5.0,
-    maxSpeed: CONFIG.PLAYER_SPEED * 1.05,
-    acceleration: 1.1,
+    maxSpeed: CONFIG.PLAYER_SPEED * 1.07,
+    acceleration: 2.0,
     handling: 1.1,
     color: 0xefefef,
   },
 };
 
-// Default aircraft 
-let currentAircraftType = AIRCRAFT_TYPES.EUROFIGHTER_TYPHOON;
+// yeh hain default aircraft
+const defaultAircraft = AIRCRAFT_TYPES.EUROFIGHTER_TYPHOON;
+
+let currentAircraftType =
+  localStorage.getItem("selectedAircraftType") ||
+  defaultAircraft;
+
+if (!AIRCRAFT_CONFIGS[currentAircraftType]) {
+  currentAircraftType = AIRCRAFT_TYPES.EUROFIGHTER_TYPHOON;
+  localStorage.setItem("selectedAircraftType", currentAircraftType);
+}
 
 /**
  * Get the currently selected aircraft configuration
@@ -58,6 +67,8 @@ export function getCurrentAircraft() {
 export function selectAircraft(aircraftType) {
   if (AIRCRAFT_CONFIGS[aircraftType]) {
     currentAircraftType = aircraftType;
+    // Store the selection in localStorage
+    localStorage.setItem("selectedAircraftType", aircraftType);
     return true;
   }
   console.error(`Invalid aircraft type: ${aircraftType}`);

@@ -177,7 +177,7 @@ function handleAircraftSelection(aircraftId) {
       <i class="fas fa-info-circle mr-2"></i>
       <span>${
         getCurrentAircraft().name
-      } selected. Changes will apply after game restart.</span>
+      } selected. Your choice has been saved and will apply after restart.</span>
     `;
 
     document.body.appendChild(notification);
