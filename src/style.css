@@ -2,8 +2,6 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: #000;
-    color: white;
-    font-family: sans-serif;
 }
 
 canvas {
@@ -14,21 +12,26 @@ canvas {
     position: absolute;
     top: 10px;
     left: 10px;
-    background-color: rgba(0,0,0,0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
-    z-index: 10;
-    font-family: monospace; 
     color: white;
+    font-family: monospace;
+    background-color: rgba(0,0,0,0.5);
+    padding: 5px;
 }
 
-#connectionStatus {
+/* Keep the loading indicator style here if you prefer,
+   or manage it via JS if more complex behavior is needed */
+/*
+#loading-indicator {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(0,0,0,0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
-    z-index: 10;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
     font-family: monospace;
+    background-color: rgba(0,0,0,0.7);
+    padding: 20px;
+    border-radius: 5px;
+    display: none;
 }
+*/

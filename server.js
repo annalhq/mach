@@ -1,227 +1,190 @@
-import { WebSocketServer, WebSocket } from "ws";
-import { v4 as uuidv4 } from "uuid";
+import { WebSocket, WebSocketServer } from 'ws';
+import { v4 as uuidv4 } from 'uuid';
 
-// --- Configuration ---
 const PORT = 8080;
-const PLAYER_TIMEOUT = 20000; // ms (20 seconds) - Increased timeout
-const CLEANUP_INTERVAL = 10000; // ms (10 seconds) - How often to check for timeouts
-
-// --- Server State ---
 const wss = new WebSocketServer({ port: PORT });
-// Map<WebSocket, { id: string, lastSeen: number }> - Use WebSocket object as key directly
-const clients = new Map();
-// Store last known state { playerId: { position, quaternion, speed } } - for late joiners
-let playerStates = {};
+
+// Store connected clients and their latest known state
+const clients = new Map(); // Map<ws, { id: string, lastUpdate: number, data: object | null }>
+const playerStates = new Map(); // Map<playerId, data: object> - Persist state slightly even if client map entry removed briefly
+
+const TICK_RATE = 10; // Updates per second for broadcasting game state (can be different from client send rate)
+const UPDATE_INTERVAL = 1000 / TICK_RATE;
+const MESSAGE_RATE_LIMIT = 15; // Max messages per second per client
+const CLIENT_TIMEOUT_MS = 10000; // Disconnect client if no message received for 10 seconds
 
 console.log(`WebSocket server started on port ${PORT}`);
-console.log(`Player timeout: ${PLAYER_TIMEOUT}ms`);
-console.log(`Cleanup interval: ${CLEANUP_INTERVAL}ms`);
 
-// --- Helper Functions ---
-
-// Broadcast message to all clients *except* the senderWS (optional)
-function broadcast(message, senderWS = null) {
-  const messageString = JSON.stringify(message);
-  wss.clients.forEach((client) => {
-    // Check if client is different from sender and is ready
-    if (client !== senderWS && client.readyState === WebSocket.OPEN) {
-      try {
-        client.send(messageString);
-      } catch (error) {
-        console.error(`Failed to send message to client:`, error);
-        // Consider terminating client if send fails repeatedly
-        // client.terminate();
-      }
-    }
-  });
-}
-
-// Send message to a specific client
-function sendToClient(ws, message) {
-  if (ws.readyState === WebSocket.OPEN) {
-    try {
-      ws.send(JSON.stringify(message));
-    } catch (error) {
-      console.error(`Failed to send direct message:`, error);
-    }
-  }
-}
-
-function broadcastPlayerCount() {
-  const playerCount = clients.size;
-  console.log(`Broadcasting player count: ${playerCount}`);
-  broadcast({ type: "server_info", playerCount: playerCount });
-}
-
-// Cleanup inactive/disconnected players based on timeout
-function cleanupDisconnectedPlayers() {
-  const now = Date.now();
-  let changed = false;
-  // console.log("Running cleanup check..."); // Debug log
-
-  clients.forEach((clientData, ws) => {
-    if (now - clientData.lastSeen > PLAYER_TIMEOUT) {
-      console.log(`Player ${clientData.id} timed out. Terminating connection.`);
-      // Don't need to delete from map here, 'close' handler does it
-      ws.terminate(); // Force close the connection, triggers 'close' event
-      changed = true; // Flag that cleanup happened
-    }
-  });
-
-  // Note: broadcastPlayerCount() is called by the 'close' handler
-}
-
-// --- WebSocket Server Event Handlers ---
 wss.on("connection", (ws) => {
-  const playerId = uuidv4(); // Generate unique ID
-  const now = Date.now();
-  console.log(`Client connected, assigning ID: ${playerId}`);
+  const clientId = uuidv4();
+  const clientInfo = {
+    id: clientId,
+    lastMessageTime: Date.now(),
+    messageCount: 0,
+    lastUpdate: Date.now(),
+    data: null, // Initialize data as null
+  };
+  clients.set(ws, clientInfo);
+  console.log(`Client connected: ${clientId} (Total: ${clients.size})`);
 
-  // Store client info using WebSocket object as key
-  clients.set(ws, { id: playerId, lastSeen: now });
+  // Send the new client their unique ID
+  ws.send(JSON.stringify({ type: "assign_id", id: clientId }));
 
-  // 1. Send the assigned ID back to the newly connected client
-  sendToClient(ws, { type: "assign_id", id: playerId });
-
-  // 2. Send current state of *all other* players to the new client
-  clients.forEach((otherClientData, otherWS) => {
-    if (ws !== otherWS && playerStates[otherClientData.id]) {
-      sendToClient(ws, {
-        type: "player_update",
-        id: otherClientData.id,
-        data: playerStates[otherClientData.id],
-      });
+  // Send the current state of all other players to the new client
+  const allPlayersData = [];
+  playerStates.forEach((data, id) => {
+    if (id !== clientId) {
+      // Don't send the new player their own (non-existent) state
+      allPlayersData.push({ id, data });
     }
   });
+  if (allPlayersData.length > 0) {
+    ws.send(JSON.stringify({ type: "world_state", players: allPlayersData }));
+    console.log(`Sent world state to ${clientId}`);
+  }
 
-  // 3. Broadcast the new player's initial state (empty or default) to others?
-  // Not strictly necessary if relying on first 'update_state' message
-  // broadcast({ type: 'player_join', id: playerId, data: {} }, ws); // Optional
+  // Inform other clients about the new player (send initial null data or wait for first update)
+  broadcast({ type: "player_join", id: clientId, data: null }, ws); // Send null initially
 
-  // 4. Update player count for everyone
-  broadcastPlayerCount();
-
-  // --- Message Handling for this Connection ---
-  ws.on("message", (messageBuffer) => {
+  ws.on("message", (message) => {
+    const now = Date.now();
     const clientData = clients.get(ws);
-    if (!clientData) {
-      // Should not happen if connection is established
-      console.warn("Received message from unknown client (WS not in map)");
-      ws.terminate(); // Close connection if state is inconsistent
-      return;
+
+    if (!clientData) return; // Should not happen, but safety check
+
+    // --- Basic Security: Rate Limiting ---
+    if (now - clientData.lastMessageTime < 1000) {
+      clientData.messageCount++;
+      if (clientData.messageCount > MESSAGE_RATE_LIMIT) {
+        console.warn(
+          `Client ${clientData.id} exceeded rate limit. Disconnecting.`
+        );
+        ws.terminate(); // Disconnect abusive client
+        return;
+      }
+    } else {
+      clientData.lastMessageTime = now;
+      clientData.messageCount = 1; // Reset count after a second
     }
+    clientData.lastUpdate = now; // Update last seen time
 
-    // Update last seen timestamp on any message activity
-    clientData.lastSeen = Date.now();
-
+    // --- Message Processing ---
     try {
-      const messageString = messageBuffer.toString();
-      // Basic security: Limit message size
-      if (messageString.length > 1024) {
+      const parsedMessage = JSON.parse(message);
+
+      // Basic validation
+      if (
+        typeof parsedMessage !== "object" ||
+        !parsedMessage.type ||
+        parsedMessage.id !== clientData.id
+      ) {
         console.warn(
-          `Player ${clientData.id} sent overly large message (${messageString.length} bytes). Ignoring.`
+          `Invalid message format or ID mismatch from ${clientData.id}`
         );
-        // Consider adding rate limiting or disconnection logic here
-        return;
+        return; // Ignore invalid messages silently or log
       }
 
-      const message = JSON.parse(messageString);
-
-      // Basic security: Validate message structure
-      if (typeof message !== "object" || !message.type || !message.payload) {
-        console.warn(
-          `Player ${clientData.id} sent malformed message. Ignoring:`,
-          messageString
-        );
-        return;
-      }
-
-      // Process valid message types
-      switch (message.type) {
-        case "update_state":
-          // Input validation (basic check if payload looks reasonable)
-          if (message.payload.position && message.payload.quaternion) {
-            // Store the latest state for this player
-            playerStates[clientData.id] = message.payload;
-
-            // Broadcast the update to all *other* clients
-            broadcast(
-              {
-                type: "player_update",
-                id: clientData.id,
-                data: message.payload,
-              },
-              ws
-            ); // Exclude the original sender
+      switch (parsedMessage.type) {
+        case "player_update":
+          // Store the latest state for this player
+          if (
+            parsedMessage.data &&
+            typeof parsedMessage.data.position === "object" &&
+            typeof parsedMessage.data.quaternion === "object"
+          ) {
+            playerStates.set(clientData.id, parsedMessage.data);
+            // No need to broadcast immediately here, the broadcast loop will handle it
           } else {
-            console.warn(
-              `Player ${clientData.id} sent invalid state payload. Ignoring.`
-            );
+            console.warn(`Invalid player_update data from ${clientData.id}`);
           }
           break;
-
-        // Handle other potential message types (chat, actions, etc.)
-        // case 'chat_message':
-        //     broadcast({ type: 'chat_broadcast', id: clientData.id, text: message.payload.text });
-        //     break;
-
+        // Add other message types handlers if needed (chat, actions, etc.)
         default:
-          console.warn(
-            `Received unknown message type from ${clientData.id}: ${message.type}`
+          console.log(
+            `Received unhandled message type ${parsedMessage.type} from ${clientData.id}`
           );
       }
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        console.error(
-          `Failed to parse JSON message from ${clientData.id}:`,
-          messageBuffer.toString(),
-          error
-        );
-      } else {
-        console.error(`Error processing message from ${clientData.id}:`, error);
-      }
-      // Consider disconnecting client if they send invalid data repeatedly
+      console.error(`Failed to parse message from ${clientData.id}:`, error);
+      // Don't disconnect for parse errors unless frequent
     }
   });
 
-  // --- Close Handling for this Connection ---
   ws.on("close", () => {
-    const clientData = clients.get(ws);
-    if (clientData) {
-      const closedPlayerId = clientData.id;
-      console.log(`Client ${closedPlayerId} disconnected.`);
-      // Remove from state tracking
-      delete playerStates[closedPlayerId];
-      // Remove from active clients map
-      clients.delete(ws);
-
-      // Notify remaining players about the disconnection
-      broadcast({ type: "player_disconnect", id: closedPlayerId });
-
-      // Update player count for everyone
-      broadcastPlayerCount();
-    } else {
-      // Closed connection was not properly tracked
-      console.warn("Untracked client disconnected.");
-    }
+    handleDisconnect(ws);
   });
 
-  // --- Error Handling for this Connection ---
   ws.on("error", (error) => {
-    const clientData = clients.get(ws);
-    const logId = clientData ? clientData.id : "unknown client";
-    console.error(`WebSocket error for ${logId}:`, error);
-    // The 'close' event will usually be triggered after an error,
-    // so cleanup is handled there. If not, the timeout will catch it.
-    // Ensure connection is terminated on error.
-    if (ws.readyState !== WebSocket.CLOSED) {
-      ws.terminate();
-    }
+    console.error(
+      `WebSocket error for client ${clients.get(ws)?.id || "unknown"}:`,
+      error
+    );
+    handleDisconnect(ws); // Assume error means connection is lost
   });
 });
 
-// --- Periodic Tasks ---
-// Set interval to run the cleanup function periodically
-setInterval(cleanupDisconnectedPlayers, CLEANUP_INTERVAL);
+function handleDisconnect(ws) {
+  const clientInfo = clients.get(ws);
+  if (clientInfo) {
+    console.log(
+      `Client disconnected: ${clientInfo.id} (Total: ${clients.size - 1})`
+    );
+    broadcast({ type: "player_leave", id: clientInfo.id }, ws); // Inform others
+    clients.delete(ws);
+    playerStates.delete(clientInfo.id); // Remove player state on disconnect
+  }
+}
 
-console.log("Server setup complete. Waiting for connections...");
+// Broadcast updated states at a fixed interval
+setInterval(() => {
+  const updates = [];
+  playerStates.forEach((data, id) => {
+    // Only send if data is not null (i.e., player has sent at least one update)
+    if (data) {
+      updates.push({ type: "player_update", id: id, data: data });
+    }
+  });
+
+  if (updates.length > 0) {
+    // This sends *all* player states in separate messages.
+    // Optimization: Could bundle updates into a single message array.
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        const clientInfo = clients.get(client);
+        if (clientInfo) {
+          updates.forEach((update) => {
+            // Don't send a player its own state back in the broadcast loop
+            // (They already have the authoritative client-side version)
+            // Although sending it back can sometimes help with server authoritative reconciliation
+            // For simplicity here, we skip sending self-updates.
+            if (update.id !== clientInfo.id) {
+              client.send(JSON.stringify(update));
+            }
+          });
+        }
+      }
+    });
+  }
+}, UPDATE_INTERVAL);
+
+// Check for timed-out clients periodically
+setInterval(() => {
+  const now = Date.now();
+  clients.forEach((clientInfo, ws) => {
+    if (now - clientInfo.lastUpdate > CLIENT_TIMEOUT_MS) {
+      console.log(`Client ${clientInfo.id} timed out. Disconnecting.`);
+      ws.terminate(); // Force close the connection
+      handleDisconnect(ws); // Clean up state
+    }
+  });
+}, CLIENT_TIMEOUT_MS / 2); // Check more frequently than the timeout duration
+
+// Helper function to broadcast a message to all clients except the sender
+function broadcast(message, senderWs) {
+  const messageString = JSON.stringify(message);
+  wss.clients.forEach((client) => {
+    if (client !== senderWs && client.readyState === WebSocket.OPEN) {
+      client.send(messageString);
+    }
+  });
+}
