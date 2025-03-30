@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as CONFIG from "./config.js";
 import { scene, camera } from "./sceneSetup.js"; // Import camera as well
 import { buildingBoundingBoxes } from "./world.js"; // Import collision data
+import { getCurrentAircraft } from "./aircraftConfig.js"; // Import aircraft config
 
 let playerAircraft = null;
 let playerVelocity = new THREE.Vector3();
@@ -38,8 +39,11 @@ function initializePlayer(loadedModelTemplate) {
   } else {
     console.log("Creating player aircraft from template...");
     playerAircraft = loadedModelTemplate.clone(); // Use SkeletonUtils.clone if animated
-    // Ensure correct initial orientation if template wasn't pre-rotated
-    // playerAircraft.rotation.set(0, Math.PI, 0); // Example if needed
+
+    // Apply aircraft-specific configuration
+    const aircraftConfig = getCurrentAircraft();
+    // Adjust aircraft properties based on selected type
+    // Scale is already applied to the template in main.js
   }
 
   playerAircraft.position.set(0, 50, 0); // Start position
@@ -153,21 +157,23 @@ function updatePlayer(deltaTime) {
 }
 
 function updatePlayerMovement(deltaTime) {
+  const aircraftConfig = getCurrentAircraft();
   const currentSpeed = playerVelocity.length();
   const maxSpeed =
-    CONFIG.PLAYER_SPEED *
+    aircraftConfig.maxSpeed *
     (controls.boost ? CONFIG.AFTERBURNER_MULTIPLIER : 1.0);
 
   // --- Angular Velocity ---
+  const handlingFactor = aircraftConfig.handling || 1.0;
   let targetPitch =
-    (controls.up ? CONFIG.PITCH_SPEED : 0) -
-    (controls.down ? CONFIG.PITCH_SPEED : 0);
+    (controls.up ? CONFIG.PITCH_SPEED * handlingFactor : 0) -
+    (controls.down ? CONFIG.PITCH_SPEED * handlingFactor : 0);
   let targetYaw =
-    (controls.left ? CONFIG.YAW_SPEED : 0) -
-    (controls.right ? CONFIG.YAW_SPEED : 0);
+    (controls.left ? CONFIG.YAW_SPEED * handlingFactor : 0) -
+    (controls.right ? CONFIG.YAW_SPEED * handlingFactor : 0);
   let targetRoll =
-    (controls.rollLeft ? CONFIG.ROLL_SPEED : 0) -
-    (controls.rollRight ? CONFIG.ROLL_SPEED : 0);
+    (controls.rollLeft ? CONFIG.ROLL_SPEED * handlingFactor : 0) -
+    (controls.rollRight ? CONFIG.ROLL_SPEED * handlingFactor : 0);
 
   playerAngularVelocity.x +=
     (targetPitch - playerAngularVelocity.x) * deltaTime * 5.0;
@@ -194,7 +200,10 @@ function updatePlayerMovement(deltaTime) {
   playerAircraft.quaternion.multiply(qx).multiply(qy).multiply(qz).normalize();
 
   // --- Linear Velocity ---
-  let thrust = controls.forward ? CONFIG.PLAYER_SPEED * 5.0 : 0;
+  const accelerationFactor = aircraftConfig.acceleration || 1.0;
+  let thrust = controls.forward
+    ? CONFIG.PLAYER_SPEED * 5.0 * accelerationFactor
+    : 0;
   thrust = thrust * (controls.boost ? CONFIG.AFTERBURNER_MULTIPLIER : 1.0);
   // Assuming model's forward is -Z after initial rotation setup
   const forwardVector = new THREE.Vector3(0, 0, -1).applyQuaternion(

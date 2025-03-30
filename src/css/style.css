@@ -74,3 +74,38 @@ canvas {
   background: linear-gradient(to bottom, transparent, #4ade80, transparent);
   transform: translateY(-50%);
 }
+
+/* Aircraft Selection Modal */
+#aircraft-modal {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+#aircraft-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#aircraft-modal:not(.hidden) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#aircraft-selector {
+  transform: translateY(20px);
+  transition: transform 0.3s ease-out;
+}
+
+#aircraft-modal:not(.hidden) #aircraft-selector {
+  transform: translateY(0);
+}
+
+.aircraft-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.aircraft-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+}

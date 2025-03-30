@@ -1,5 +1,5 @@
 // --- Configuration ---
-export const WEBSOCKET_URL = "ws://localhost:8080"; 
+export const WEBSOCKET_URL = "ws://localhost:8080";
 export const PLAYER_SPEED = 200.0; // Base speed units/sec
 export const AFTERBURNER_MULTIPLIER = 3.0;
 export const ROLL_SPEED = Math.PI * 1.0; // Radians per second
@@ -17,8 +17,7 @@ export const MIN_BUILDING_HEIGHT = 50;
 export const STAR_COUNT = 5000;
 export const DAY_NIGHT_CYCLE_MINUTES = 10; // Duration of a full day/night cycle
 export const ASSETS_DIR = "/assets/"; // Vite serves from public dir or uses asset handling
-export const MODEL_URL = `${ASSETS_DIR}/jets/shenyang_j-11.glb`;
-export const MODEL_SCALE = 0.8; // <-- ADJUST THIS scale to fit your model size
+// MODEL_URL and MODEL_SCALE removed, now managed in aircraftConfig.js
 export const OTHER_PLAYER_COLOR = 0x00aaff; // A blue tint for other players (currently unused but kept)
 
 // --- Terrain & Tree Constants ---

@@ -22,6 +22,12 @@ import {
   sendUpdateToServerIfReady,
   displayError,
 } from "./core/multiplayer.js";
+import {
+  getCurrentAircraft,
+  selectAircraft,
+  AIRCRAFT_TYPES,
+} from "./core/aircraftConfig.js";
+import { initializeAircraftUI } from "./core/ui.js";
 
 // --- Global State (Minimal) ---
 let loadingManager;
@@ -99,15 +105,17 @@ function loadResources() {
 
   // --- Load Model ---
   const gltfLoader = new GLTFLoader(loadingManager);
+  const aircraftConfig = getCurrentAircraft();
+
   gltfLoader.load(
-    CONFIG.MODEL_URL,
+    aircraftConfig.modelUrl,
     (gltf) => {
-      console.log("Aircraft model loaded.");
+      console.log(`Aircraft model ${aircraftConfig.name} loaded.`);
       loadedModelTemplate = gltf.scene;
       loadedModelTemplate.scale.set(
-        CONFIG.MODEL_SCALE,
-        CONFIG.MODEL_SCALE,
-        CONFIG.MODEL_SCALE
+        aircraftConfig.scale,
+        aircraftConfig.scale,
+        aircraftConfig.scale
       );
       loadedModelTemplate.traverse((child) => {
         if (child.isMesh) {
@@ -213,6 +221,9 @@ async function initializeGame() {
 
   // Initialize Multiplayer (pass loaded model for cloning others)
   initializeMultiplayer(loadedModelTemplate);
+
+  // Initialize UI components
+  initializeAircraftUI();
 
   // Start the animation loop
   gameInitialized = true;
