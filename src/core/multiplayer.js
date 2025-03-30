@@ -44,7 +44,7 @@ function setupWebSocket() {
 
   ws.onerror = (error) => {
     console.error("WebSocket Error:", error);
-    displayError("Connection error. Please refresh.");
+    displayError("Server not connected, please refresh.");
     cleanupMultiplayer();
   };
 
@@ -188,38 +188,43 @@ function sendUpdateToServerIfReady(playerData) {
 
 function updatePlayerCount() {
   if (playersCountElement) {
-    playersCountElement.textContent = otherPlayers.size + (playerId ? 1 : 0); // Only count self if connected
+    playersCountElement.textContent = otherPlayers.size + (playerId ? 1 : 0);
   }
 }
 
 function displayError(message) {
-  console.error("Displaying Error:", message); // Log it too
-  // Use a dedicated div or modify the loading indicator
+  console.error("Displaying Error:", message);
+
+  // Update the HUD error display
+  const errorDisplay = document.getElementById("error-display");
+  const errorMessage = document.getElementById("error-message");
+
+  if (errorDisplay && errorMessage) {
+    errorMessage.textContent = message;
+    errorDisplay.classList.remove("hidden");
+  }
+
+  // Keep the loading indicator for critical errors during loading
   const indicator = document.getElementById("loading-indicator");
-  if (indicator) {
+  if (indicator && (!errorDisplay || !errorMessage)) {
     indicator.textContent = `Error: ${message}`;
     indicator.style.color = "red";
     indicator.style.display = "block";
     indicator.style.backgroundColor = "rgba(50,0,0,0.8)";
   }
-  // Alternatively, create/use a specific error div
-  if (!errorDisplayElement) {
-    errorDisplayElement = document.createElement("div");
-    // Style it appropriately (absolute position, red text, etc.)
-    // document.body.appendChild(errorDisplayElement);
-  }
-  // errorDisplayElement.textContent = message;
-  // errorDisplayElement.style.display = 'block';
 }
 
 function clearErrorDisplay() {
+  // Clear the HUD error display
+  const errorDisplay = document.getElementById("error-display");
+  if (errorDisplay) {
+    errorDisplay.classList.add("hidden");
+  }
+
+  // Also clear the loading indicator if it's showing an error
   const indicator = document.getElementById("loading-indicator");
   if (indicator && indicator.textContent.startsWith("Error:")) {
-    // Reset or hide if it was showing an error
-    // indicator.style.display = 'none'; // Or reset text/style
-  }
-  if (errorDisplayElement) {
-    // errorDisplayElement.style.display = 'none';
+    indicator.style.display = "none";
   }
 }
 

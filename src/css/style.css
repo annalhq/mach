@@ -8,6 +8,38 @@ canvas {
   display: block;
 }
 
+/* Animation for error dot */
+@keyframes blinkingDot {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.error-dot {
+  animation: blinkingDot 1s infinite;
+}
+
+/* Loading indicator */
+#loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 24px;
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 5px;
+  display: none;
+}
+
 /* HUD */
 #info {
   position: absolute;
@@ -20,8 +52,8 @@ canvas {
   text-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
   filter: drop-shadow(0 0 1px rgba(34, 197, 94, 0.2));
   cursor: none;
-  user-select: none;         /* Prevent text selection and blinking cursor */
-  pointer-events: none;       /* Optional: disable interactions on the HUD */
+  user-select: none;
+  pointer-events: none;
 }
 
 #speed,

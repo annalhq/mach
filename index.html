@@ -11,8 +11,7 @@
 </head>
 
 <body>
-  <div id="loading-indicator"
-    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; font-family: monospace; background-color: rgba(0,0,0,0.7); padding: 20px; border-radius: 5px; display: none;">
+  <div id="loading-indicator">
     Loading Model...
   </div>
 
@@ -48,6 +47,15 @@
           <div class="flex items-center">
             <span id="players-count" class="text-lg font-bold text-green-100">1</span>
           </div>
+        </div>
+
+        <!-- New Error Display Section -->
+        <div id="error-display" class="hidden">
+          <div class="flex items-center border-t border-red-500 pt-2 mt-1">
+            <div class="error-dot w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+            <div class="text-[10px] tracking-wider text-red-300">ALERT</div>
+          </div>
+          <div class="text-red-400 text-[10px] mt-1 font-bold" id="error-message"></div>
         </div>
       </div>
     </div>
