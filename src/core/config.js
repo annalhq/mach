@@ -17,7 +17,7 @@ export const MIN_BUILDING_HEIGHT = 50;
 export const STAR_COUNT = 5000;
 export const DAY_NIGHT_CYCLE_MINUTES = 10; // Duration of a full day/night cycle
 export const ASSETS_DIR = "/assets/"; // Vite serves from public dir or uses asset handling
-export const MODEL_URL = `${ASSETS_DIR}shenyang_j-11.glb`; // Ensure 'assets' is in 'public' folder for Vite
+export const MODEL_URL = `${ASSETS_DIR}/jets/shenyang_j-11.glb`;
 export const MODEL_SCALE = 0.8; // <-- ADJUST THIS scale to fit your model size
 export const OTHER_PLAYER_COLOR = 0x00aaff; // A blue tint for other players (currently unused but kept)
 
