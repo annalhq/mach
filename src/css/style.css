@@ -1,0 +1,44 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+canvas {
+  display: block;
+}
+
+/* HUD */
+#info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  text-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
+  filter: drop-shadow(0 0 1px rgba(34, 197, 94, 0.2));
+  cursor: none;
+  user-select: none;         /* Prevent text selection and blinking cursor */
+  pointer-events: none;       /* Optional: disable interactions on the HUD */
+}
+
+#speed,
+#altitude,
+#players-count {
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+  letter-spacing: 1px;
+}
+
+#info::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  height: 70%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, #4ade80, transparent);
+  transform: translateY(-50%);
+}

@@ -1,5 +1,5 @@
 // --- Configuration ---
-export const WEBSOCKET_URL = "ws://localhost:8080"; // Adjust if your server is elsewhere
+export const WEBSOCKET_URL = "ws://localhost:8080"; 
 export const PLAYER_SPEED = 200.0; // Base speed units/sec
 export const AFTERBURNER_MULTIPLIER = 3.0;
 export const ROLL_SPEED = Math.PI * 1.0; // Radians per second
