@@ -6,22 +6,46 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.jpg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MachX</title>
-  <!-- Fixed CSS path -->
-  <link rel="stylesheet" href="./src/style.css" />
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
-  <div id="info">
-    Speed: <span id="speedDisplay">0</span> km/h<br>
-    Altitude: <span id="altitudeDisplay">0</span> m<br>
-    Players: <span id="playerCount">1</span>
+<body class="overflow-hidden m-0 p-0">
+  <div id="loading-indicator"
+    class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-2xl font-mono bg-black/70 p-5 rounded z-50">
+    Loading Assets...
   </div>
-  <div id="connectionStatus">Connecting...</div>
-  <div id="crosshair">+</div>
-  <!-- canvas injected via js hehe -->
-  <div id="debug" style="position: absolute; bottom: 10px; left: 10px; background-color: rgba(0,0,0,0.5); padding: 10px; z-index: 20;">
-    Debug: <span id="debugInfo">Initializing...</span>
+
+  <div id="error-display"
+    class="absolute bottom-3 left-1/2 transform -translate-x-1/2 text-red-500 bg-black/80 p-3 rounded font-mono hidden z-50">
+    Error Message
   </div>
+
+  <canvas id="gameCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
+
+  <div id="info" class="absolute top-5 left-5 bg-black/40 text-green-400 p-4 rounded-lg font-mono text-lg backdrop-blur-sm border border-green-500/30 shadow-lg z-10">
+    <div class="flex flex-col space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="text-green-300">Speed:</span>
+        <span id="speedDisplay" class="font-bold">0</span>
+        <span class="text-sm text-green-300/80">km/h</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-green-300">Altitude:</span>
+        <span id="altitudeDisplay" class="font-bold">0</span>
+        <span class="text-sm text-green-300/80">m</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-green-300">Players:</span>
+        <span id="playerCount" class="font-bold">0</span>
+      </div>
+    </div>
+  </div>
+  
+  <div id="connectionStatus" class="absolute bottom-5 right-5 bg-black/40 text-amber-400 px-3 py-1 rounded font-mono z-10">
+    Initializing...
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 
