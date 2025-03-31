@@ -1,4 +1,3 @@
-// src/main.js
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { initializeScene, handleResize } from "./core/sceneSetup.js";
@@ -7,7 +6,7 @@ import {
   updateWorld,
   loadWorldAssets,
   getTerrainHeight,
-} from "./core/world.js"; // Import load function
+} from "./core/world.js";
 import {
   createPlayerAircraft,
   updatePlayer,
@@ -31,18 +30,18 @@ import {
   DAY_NIGHT_CYCLE_MINUTES,
   MODEL_URL,
   MODEL_SCALE,
-} from "./core/config.js"; // Import necessary configs
+} from "./core/config.js";
 
 let scene, camera, renderer, clock;
 let skyLight, sunLight, ambientLight;
 let playerAircraft = null;
 let worldData = { buildingBoundingBoxes: [], clouds: null };
-let assetRefs = { playerModelTemplate: null }; // Store only the essential model template ref here
+let assetRefs = { playerModelTemplate: null };
 let gameInitialized = false;
-let sunAngle = Math.PI / 3; // Start slightly later in the morning
+let sunAngle = Math.PI / 3;
 
 function runGame() {
-  console.log("Starting Vibe Jet...");
+  console.log("initializing game...");
   clock = new THREE.Clock();
   const sceneComps = initializeScene();
   scene = sceneComps.scene;
@@ -79,23 +78,20 @@ async function loadAssetsAndInitialize() {
   loadingManager.onError = (url) => console.error(`Loading Error: ${url}`);
 
   try {
-    // --- Load Assets Concurrently ---
     const loadPromises = [
       loadPlayerModel(loadingManager),
-      loadWorldAssets(loadingManager), // Returns { roadTexture, grassTexture }
+      loadWorldAssets(loadingManager),
     ];
     const [modelTemplate, worldTextures] = await Promise.all(loadPromises);
 
-    // Store loaded refs
     assetRefs.playerModelTemplate = modelTemplate;
-    // Pass textures directly to world initializer
     worldData = initializeWorld(
       scene,
       worldTextures.grassTexture,
       worldTextures.roadTexture
     );
 
-    // --- Initialize Components AFTER assets are ready ---
+    // --- Initialize Components after assets are ready ---
     playerAircraft = createPlayerAircraft(scene, assetRefs.playerModelTemplate);
     if (!playerAircraft) throw new Error("Failed to create player aircraft");
 
@@ -104,7 +100,7 @@ async function loadAssetsAndInitialize() {
     updatePlayerCountUI(1);
     updateGameUI(0, playerAircraft.position.y);
   } catch (error) {
-    throw error; // Propagate error up
+    throw error;
   }
 }
 
@@ -144,7 +140,7 @@ function updateDayNightCycle(deltaTime) {
   const dayIntensity = Math.max(0, sunY);
   const nightIntensity = Math.max(0, -sunY);
   sunLight.intensity = dayIntensity * 1.5;
-  skyLight.intensity = 0.15 + dayIntensity * 0.5 + nightIntensity * 0.1; // Adjusted balance
+  skyLight.intensity = 0.15 + dayIntensity * 0.5 + nightIntensity * 0.1;
   ambientLight.intensity = 0.1 + dayIntensity * 0.15;
 
   const daySky = new THREE.Color(0x87ceeb);
@@ -155,13 +151,13 @@ function updateDayNightCycle(deltaTime) {
   const blend = (sunY + 1) / 2;
   const currentSky = new THREE.Color().lerpColors(nightSky, daySky, blend);
   const sunsetGlow = Math.sin(blend * Math.PI);
-  currentSky.lerp(sunsetCol, sunsetGlow * 0.25); // Less intense sunset blend
+  currentSky.lerp(sunsetCol, sunsetGlow * 0.25);
   skyLight.color.copy(currentSky);
-  skyLight.groundColor.set(0x556b2f).lerp(nightSky, nightIntensity * 0.7); // Greener ground color
+  skyLight.groundColor.set(0x556b2f).lerp(nightSky, nightIntensity * 0.7);
   scene.fog.color.lerpColors(nightFog, dayFog, blend);
-  scene.fog.near = 600 + nightIntensity * 1000; // Adjusted fog distance
+  scene.fog.near = 600 + nightIntensity * 1000;
   scene.fog.far = 16000 - nightIntensity * 6000;
-  renderer.setClearColor(currentSky.clone().multiplyScalar(0.7)); // Slightly darker background
+  renderer.setClearColor(currentSky.clone().multiplyScalar(0.7));
 }
 
 function animate() {
@@ -181,4 +177,4 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-runGame(); // Start the process
+runGame();

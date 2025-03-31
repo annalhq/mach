@@ -1,14 +1,13 @@
 import * as THREE from "three";
 import * as CONFIG from "./config.js";
-import { scene } from "./sceneSetup.js"; // Import scene from sceneSetup
+import { scene } from "./sceneSetup.js";
 
 let buildingBoundingBoxes = [];
 let clouds = null;
-let roadTexture = null; // Loaded in main.js and passed
-let grassTexture = null; // Loaded in main.js
-let mountainSignTextTexture = null; // To cache canvas texture
+let roadTexture = null;
+let grassTexture = null;
+let mountainSignTextTexture = null;
 
-// --- Terrain Height Calculation ---
 function getTerrainHeight(worldX, worldZ) {
   return (
     Math.sin(worldX * CONFIG.TERRAIN_FREQUENCY) *
@@ -16,8 +15,6 @@ function getTerrainHeight(worldX, worldZ) {
     CONFIG.TERRAIN_AMPLITUDE
   );
 }
-
-// --- Object Creation Functions (Keep them internal or export if needed elsewhere) ---
 
 function createGround() {
   if (!grassTexture) {
@@ -49,7 +46,7 @@ function createGround() {
 
   for (let i = 0; i < positionAttribute.count; i++) {
     vertex.fromBufferAttribute(positionAttribute, i);
-    const height = getTerrainHeight(vertex.x, vertex.y); // Use y before rotation
+    const height = getTerrainHeight(vertex.x, vertex.y);
     positionAttribute.setZ(i, height);
   }
   positionAttribute.needsUpdate = true;
@@ -96,7 +93,7 @@ function createSkyscrapers(count) {
     const z = (Math.random() - 0.5) * (CONFIG.GROUND_SIZE * 0.9);
     const y = getTerrainHeight(x, z) + height / 2;
 
-    if (y - height / 2 < 0) continue; // Skip if base is below Y=0
+    if (y - height / 2 < 0) continue;
 
     building.position.set(x, y, z);
     building.castShadow = true;
@@ -209,12 +206,10 @@ function Castle() {
     flatShading: true,
   });
 
-  // Keep
   const keep = new THREE.Mesh(new THREE.BoxGeometry(40, 60, 40), stoneMaterial);
   keep.position.y = 30;
   castleGroup.add(keep);
 
-  // Banner
   const castleBannerGeometry = new THREE.PlaneGeometry(30, 15);
   const castleBannerMaterial = new THREE.MeshBasicMaterial({
     map: createCastleTextTexture(),
@@ -264,9 +259,9 @@ function Castle() {
   }
 
   castleGroup.scale.set(3.0, 3.0, 3.0);
-  castleGroup.position.set(2000, 10, 1000); // Adjusted y based on scale and position
+  castleGroup.position.set(2000, 10, 1000);
   castleGroup.position.y =
-    getTerrainHeight(castleGroup.position.x, castleGroup.position.z) + 30 * 3.0; // Place based on keep bottom
+    getTerrainHeight(castleGroup.position.x, castleGroup.position.z) + 30 * 3.0;
   return castleGroup;
 }
 
@@ -274,17 +269,12 @@ function createCastle() {
   console.log("Creating castle...");
   const castle = Castle();
   scene.add(castle);
-  // Add bounding box for the whole castle group (approximate)
-  // Adjust size based on visual extent and scale
-  const castleBox = new THREE.Box3().setFromObject(castle); // Might need manual adjustment for accuracy
+
+  const castleBox = new THREE.Box3().setFromObject(castle);
   buildingBoundingBoxes.push(castleBox);
   console.log("Castle created.");
 }
 
-// ... (Keep BigHouse, createBigHouse, createGiantRobot, Mountain, createMountain, UFO, createUFO, Blimp, createBlimp - Similar structure)
-// Make sure to add bounding boxes for collision where appropriate (e.g., for BigHouse instances, Robot, Mountain Base)
-
-// Example simplified BigHouse with collision box
 function BigHouse() {
   const houseGroup = new THREE.Group();
   const scale = 10;
@@ -304,22 +294,21 @@ function BigHouse() {
   building.castShadow = true;
   building.receiveShadow = true;
   houseGroup.add(building);
-  // Add simplified roof, windows, door if desired (omitted for brevity)
-  return houseGroup; // Return the group and height/width/depth for collision box
+
+  return houseGroup;
 }
 
 function createBigHouse(count) {
   console.log("Creating big houses...");
   for (let i = 0; i < count; i++) {
-    const house = BigHouse(); // Assume BigHouse now returns { group, width, height, depth } if needed
+    const house = BigHouse();
     const x = (Math.random() - 0.5) * (CONFIG.GROUND_SIZE * 0.9);
     const z = (Math.random() - 0.5) * (CONFIG.GROUND_SIZE * 0.9);
-    const y = getTerrainHeight(x, z); // Base height
-    house.position.set(x, y, z); // Set group position (origin at base)
+    const y = getTerrainHeight(x, z);
+    house.position.set(x, y, z);
     house.rotation.y = Math.random() * Math.PI * 2;
     scene.add(house);
-    // Add bounding box
-    const box = new THREE.Box3().setFromObject(house); // Box around the group
+    const box = new THREE.Box3().setFromObject(house);
     buildingBoundingBoxes.push(box);
   }
   console.log("Big houses created.");
@@ -392,7 +381,6 @@ function createGiantRobot() {
   rightLeg.position.set(3, -11, 0);
   robotGroup.add(rightLeg);
 
-  // Banner
   const bannerCanvas = document.createElement("canvas");
   bannerCanvas.width = 512;
   bannerCanvas.height = 128;
@@ -422,14 +410,14 @@ function createGiantRobot() {
   robotGroup.scale.set(8.0, 8.0, 8.0);
   const x = -800;
   const z = 2000 > CONFIG.GROUND_SIZE ? CONFIG.GROUND_SIZE * 0.9 : 2000;
-  // Approx height: body center (0) + half leg height (11) * scale = 88. Add buffer.
+
   const robotBaseY = 11 * 8.0;
-  const y = getTerrainHeight(x, z) + robotBaseY + 20; // Place feet on ground + buffer
+  const y = getTerrainHeight(x, z) + robotBaseY + 20;
   robotGroup.position.set(x, y, z);
   robotGroup.rotation.y = 15.0;
 
   scene.add(robotGroup);
-  // Add bounding box
+
   const robotBox = new THREE.Box3().setFromObject(robotGroup);
   buildingBoundingBoxes.push(robotBox);
   console.log("Giant robot created.");
@@ -442,15 +430,14 @@ function createMountainSignTextTexture(fontLoadedPromise) {
   canvas.height = 256;
   const context = canvas.getContext("2d");
 
-  // Ensure font is loaded before drawing
   return fontLoadedPromise
     .then(() => {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.font = 'bold 60px "SF Hollywood Hills"'; // Use loaded font name
+      context.font = 'bold 60px "SF Hollywood Hills"';
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.strokeStyle = "#000000";
-      context.lineWidth = 2; // Add stroke width
+      context.lineWidth = 2;
       context.fillStyle = "#FFFFFF";
       context.strokeText("CEDRICCHEE.COM", canvas.width / 2, canvas.height / 2);
       context.fillText("CEDRICCHEE.COM", canvas.width / 2, canvas.height / 2);
@@ -459,16 +446,16 @@ function createMountainSignTextTexture(fontLoadedPromise) {
     .catch((err) => {
       console.error("Font loading failed, using default for sign:", err);
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.font = "bold 60px sans-serif"; // Fallback font
+      context.font = "bold 60px sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillStyle = "#FFFFFF";
       context.fillText("CEDRICCHEE.COM", canvas.width / 2, canvas.height / 2);
-      return new THREE.CanvasTexture(canvas); // Return fallback texture
+      return new THREE.CanvasTexture(canvas);
     });
 }
 
-let fontLoadPromise = null; // Store the promise
+let fontLoadPromise = null;
 
 function loadMountainFont() {
   if (!fontLoadPromise) {
@@ -482,18 +469,17 @@ function loadMountainFont() {
       .then((loadedFont) => {
         document.fonts.add(loadedFont);
         console.log("Hollywood font loaded.");
-        return true; // Indicate success
+        return true;
       })
       .catch((err) => {
         console.error("Failed to load Hollywood font:", err);
-        return false; // Indicate failure
+        return false;
       });
   }
   return fontLoadPromise;
 }
 
 async function Mountain() {
-  // Make async to wait for texture
   console.log("Creating mountain...");
   const mountainGroup = new THREE.Group();
   const mountainMaterial = new THREE.MeshPhongMaterial({
@@ -505,7 +491,6 @@ async function Mountain() {
     flatShading: true,
   });
 
-  // Main peak
   const mountainGeometry = new THREE.ConeGeometry(100, 200, 6);
   const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
   mountain.position.y = 100;
@@ -513,8 +498,7 @@ async function Mountain() {
   mountain.receiveShadow = true;
   mountainGroup.add(mountain);
 
-  // Sign - wait for texture
-  const signTexture = await createMountainSignTextTexture(loadMountainFont()); // Await the texture promise
+  const signTexture = await createMountainSignTextTexture(loadMountainFont());
   const mountainSignGeometry = new THREE.PlaneGeometry(120, 30);
   const mountainSignMaterial = new THREE.MeshBasicMaterial({
     map: signTexture,
@@ -526,23 +510,21 @@ async function Mountain() {
     mountainSignGeometry,
     mountainSignMaterial
   );
-  mountainSign.position.set(-60, 70, 40); // Position relative to mountain center
+  mountainSign.position.set(-60, 70, 40);
   mountainSign.rotation.y = -1.1;
-  mountain.add(mountainSign); // Add sign to the mountain mesh itself
+  mountain.add(mountainSign);
 
   // Snow cap
   const snowCapGeometry = new THREE.ConeGeometry(40, 50, 6);
   const snowCap = new THREE.Mesh(snowCapGeometry, snowMaterial);
   snowCap.position.y = 175;
-  mountain.add(snowCap); // Add cap to main mountain
-
-  // ... (Smaller peaks and trees - simplified/omitted for brevity, add back if needed)
+  mountain.add(snowCap);
 
   mountainGroup.position.set(-2000, 0, -800);
   mountainGroup.position.y = getTerrainHeight(
     mountainGroup.position.x,
     mountainGroup.position.z
-  ); // Set base on terrain
+  );
   mountainGroup.scale.set(2.0, 2.0, 2.0);
   mountainGroup.rotation.y = 15.0;
 
@@ -550,11 +532,9 @@ async function Mountain() {
 }
 
 async function createMountain() {
-  // Make async
-  const mountain = await Mountain(); // Await the async Mountain function
+  const mountain = await Mountain();
   scene.add(mountain);
-  // Add bounding box for the base
-  const mountainBox = new THREE.Box3().setFromObject(mountain); // Approximate box
+  const mountainBox = new THREE.Box3().setFromObject(mountain);
   buildingBoundingBoxes.push(mountainBox);
   console.log("Mountain created.");
 }
@@ -640,7 +620,7 @@ function UFO() {
     ufoGroup.add(ufoLight);
   });
 
-  ufoGroup.position.set(0, 40, 70); // Initial relative position for animation start
+  ufoGroup.position.set(0, 40, 70);
   return ufoGroup;
 }
 
@@ -649,9 +629,8 @@ function createUFO() {
   ufoGroup.scale.set(2.0, 2.0, 2.0);
   scene.add(ufoGroup);
 
-  // Animation (lives within this module as it targets the ufoGroup)
   const ufoAnimation = () => {
-    if (!ufoGroup) return; // Stop if UFO removed
+    if (!ufoGroup) return;
     const ufoTime = Date.now() * 0.001;
     ufoGroup.position.x = 0 + Math.sin(ufoTime * 0.2) * 500;
     ufoGroup.position.z = -70 + Math.cos(ufoTime * 0.2) * 500;
@@ -684,7 +663,7 @@ function Blimp(mainBodyColor, tailColor, finColor) {
 
   const blimpTailGeometry = new THREE.ConeGeometry(15, 20, 32);
   blimpTailGeometry.rotateX(Math.PI / 2);
-  blimpTailGeometry.translate(0, 0, 45); // Relative Z offset
+  blimpTailGeometry.translate(0, 0, 45);
   const blimpTail = new THREE.Mesh(blimpTailGeometry, blimpTailMaterial);
   blimpGroup.add(blimpTail);
 
@@ -706,11 +685,10 @@ function Blimp(mainBodyColor, tailColor, finColor) {
   blimpHorizontalFin.rotation.z = Math.PI / 2;
   blimpGroup.add(blimpHorizontalFin);
 
-  // Enable shadows for blimp parts
   blimpGroup.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
-      child.receiveShadow = true; // Gondola might receive shadow
+      child.receiveShadow = true;
     }
   });
 
@@ -830,7 +808,7 @@ function createTrees(count) {
 
   trunkInstancedMesh.count = actualTreeCount;
   foliageInstancedMesh.count = actualTreeCount;
-  trunkInstancedMesh.instanceMatrix.needsUpdate = true; // Required after setting matrices
+  trunkInstancedMesh.instanceMatrix.needsUpdate = true;
   foliageInstancedMesh.instanceMatrix.needsUpdate = true;
 
   scene.add(trunkInstancedMesh);
@@ -839,7 +817,6 @@ function createTrees(count) {
 }
 
 function createClouds(cloudTexture) {
-  // Pass loaded texture
   if (!cloudTexture) {
     console.warn("Cloud texture not loaded, skipping cloud creation.");
     return;
@@ -966,49 +943,43 @@ function createRoads() {
 
 // --- Main World Creation Function ---
 async function initializeWorld(textures) {
-  // Make async for mountain creation
   console.log("Initializing world...");
-  buildingBoundingBoxes = []; // Clear existing boxes
-  roadTexture = textures.road; // Store texture reference
+  buildingBoundingBoxes = [];
+  roadTexture = textures.road;
   grassTexture = textures.grass;
 
   createGround();
 
-  // Populate Landscape
   createSkyscrapers(CONFIG.BUILDING_COUNT);
   createHouses(20);
   createPonds(30);
   createCastle();
   createBigHouse(50);
   createGiantRobot();
-  await createMountain(); // Wait for mountain (and its font/texture) to be ready
+  await createMountain();
   createUFO();
   createBlimp();
-  // createLandmarks(10); // Optional
+  // createLandmarks(10);
 
-  // Dependent elements
-  createTrees(CONFIG.TREE_COUNT); // Depends on terrain and buildings
-  createClouds(textures.cloud); // Pass cloud texture
-  createRoads(); // Depends on terrain
+  createTrees(CONFIG.TREE_COUNT);
+  createClouds(textures.cloud);
+  createRoads();
 
   console.log("World initialization complete.");
 }
 
 function updateWorld(deltaTime) {
-  // Update dynamic world elements like clouds
   if (clouds) {
     clouds.position.x += CONFIG.CLOUD_DRIFT_SPEED * deltaTime;
     if (clouds.position.x > CONFIG.CLOUD_AREA_XZ / 2) {
       clouds.position.x -= CONFIG.CLOUD_AREA_XZ;
     }
   }
-  // Could add animation updates for other world elements here if needed
 }
 
-// --- Exports ---
 export {
   initializeWorld,
   updateWorld,
   getTerrainHeight,
-  buildingBoundingBoxes, // Export for collision detection in player.js
+  buildingBoundingBoxes,
 };

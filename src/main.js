@@ -29,7 +29,6 @@ import {
 } from "./core/aircraftConfig.js";
 import { initializeAircraftUI } from "./core/ui.js";
 
-// --- Global State (Minimal) ---
 let loadingManager;
 let loadedModelTemplate = null;
 let loadedTextures = {
@@ -39,20 +38,15 @@ let loadedTextures = {
 };
 let gameInitialized = false;
 
-// --- DOM Elements ---
 let loadingIndicator;
 
-// --- Initialization ---
 function init() {
   loadingIndicator = document.getElementById("loading-indicator");
   if (!loadingIndicator) {
     console.error("Loading indicator element not found!");
   }
 
-  // Initialize basic scene components
-  initializeScene(); // Creates scene, camera, renderer, clock, lights, stars
-
-  // Start loading assets
+  initializeScene();
   loadResources();
 }
 
@@ -60,7 +54,7 @@ function showLoadingIndicator(show, message = "Loading...") {
   if (loadingIndicator) {
     loadingIndicator.textContent = message;
     loadingIndicator.style.display = show ? "block" : "none";
-    // Reset error styles if hiding or showing normal loading
+
     if (show || !message.startsWith("Error:")) {
       loadingIndicator.style.color = "white";
       loadingIndicator.style.backgroundColor = "rgba(0,0,0,0.7)";
@@ -70,23 +64,17 @@ function showLoadingIndicator(show, message = "Loading...") {
 
 function loadResources() {
   showLoadingIndicator(true, "Loading Assets...");
-  let itemsToLoad = 4; // Model + 3 Textures
+  let itemsToLoad = 4;
   let itemsLoaded = 0;
 
   loadingManager = new THREE.LoadingManager(
-    // --- All Loaded ---
     () => {
       console.log("All resources loaded.");
-      showLoadingIndicator(false); // Hide after textures confirmed loaded too
-      initializeGame(); // Proceed to game setup
+      showLoadingIndicator(false);
+      initializeGame();
     },
-    // --- Progress ---
-    (url, loaded, total) => {
-      // Note: Manager progress might only track files it directly manages (like GLTF dependencies)
-      // We manually track textures.
-      // console.log(`Loading file: ${url} (${loaded}/${total})`);
-      // updateLoadingProgress(); // Call manual progress update
-    },
+
+    (url, loaded, total) => {},
     // --- Error ---
     (url) => {
       console.error("Loading manager error for: " + url);
@@ -103,35 +91,30 @@ function loadResources() {
     showLoadingIndicator(true, `Loading Assets... ${progress}%`);
   };
 
-  // --- Load Model ---
+  // --- Model loader ---
   const gltfLoader = new GLTFLoader(loadingManager);
-  const aircraftConfig = getCurrentAircraft(); // This will now use the stored preference
+  const aircraftConfig = getCurrentAircraft();
 
   console.log(`Loading selected aircraft: ${aircraftConfig.name}`);
 
-  gltfLoader.load(
-    aircraftConfig.modelUrl,
-    (gltf) => {
-      console.log(`Aircraft model ${aircraftConfig.name} loaded.`);
-      loadedModelTemplate = gltf.scene;
-      loadedModelTemplate.scale.set(
-        aircraftConfig.scale,
-        aircraftConfig.scale,
-        aircraftConfig.scale
-      );
-      loadedModelTemplate.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-        }
-      });
-      // Set default rotation (nose towards -Z, top towards +Y)
-      loadedModelTemplate.rotation.set(0, Math.PI, 0);
-      updateLoadingProgress();
-    } /* Let manager handle progress/error */
-  );
+  gltfLoader.load(aircraftConfig.modelUrl, (gltf) => {
+    console.log(`Aircraft model ${aircraftConfig.name} loaded.`);
+    loadedModelTemplate = gltf.scene;
+    loadedModelTemplate.scale.set(
+      aircraftConfig.scale,
+      aircraftConfig.scale,
+      aircraftConfig.scale
+    );
+    loadedModelTemplate.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+      }
+    });
+    loadedModelTemplate.rotation.set(0, Math.PI, 0);
+    updateLoadingProgress();
+  });
 
-  // --- Load Textures ---
-  const textureLoader = new THREE.TextureLoader(); // Use a separate loader or add to manager's scope
+  const textureLoader = new THREE.TextureLoader();
 
   // Road Texture
   textureLoader.load(
@@ -146,7 +129,7 @@ function loadResources() {
     undefined,
     (err) => {
       console.error("Failed to load road texture:", err);
-      itemsToLoad--; /* Failed */
+      itemsToLoad--;
     }
   );
 
@@ -172,7 +155,7 @@ function loadResources() {
       console.log("Ground texture loaded.");
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      const repeats = CONFIG.GROUND_SIZE / 100; // Adjust divisor based on texture size/look
+      const repeats = CONFIG.GROUND_SIZE / 100;
       texture.repeat.set(repeats, repeats);
       loadedTextures.grass = texture;
       updateLoadingProgress();
@@ -184,9 +167,8 @@ function loadResources() {
     }
   );
 
-  // Check if loading manager needs manual trigger if no files assigned
   if (itemsToLoad === 0) {
-    // Edge case if all textures fail instantly?
+    // Edge case if all textures fail instantly
     loadingManager.onLoad();
   }
 }
@@ -212,48 +194,36 @@ async function initializeGame() {
 
   console.log("Initializing game...");
 
-  // Initialize World (async)
-  await initializeWorld(loadedTextures); // Pass loaded textures
-
-  // Initialize Player (pass loaded model)
+  await initializeWorld(loadedTextures);
   initializePlayer(loadedModelTemplate);
 
-  // Setup Controls
   setupPlayerControls();
 
-  // Initialize Multiplayer (pass loaded model for cloning others)
   initializeMultiplayer(loadedModelTemplate);
 
-  // Initialize UI components
   initializeAircraftUI();
 
-  // Start the animation loop
   gameInitialized = true;
   animate();
   console.log("Game initialized and animation loop started.");
 }
 
-// --- Game Loop ---
 function animate() {
-  if (!gameInitialized) return; // Stop loop if game hasn't started
+  if (!gameInitialized) return;
 
   requestAnimationFrame(animate);
 
   const deltaTime = clock.getDelta();
 
-  // Update game components
   updatePlayer(deltaTime);
   updateCamera(deltaTime);
-  updateWorld(deltaTime); // Update clouds, etc.
+  updateWorld(deltaTime);
   updateDayNightCycle(deltaTime);
 
-  // Multiplayer updates
   const playerData = getPlayerStateForNetwork();
   sendUpdateToServerIfReady(playerData);
 
-  // Render the scene
   renderer.render(scene, camera);
 }
 
-// --- Start the application ---
 init();

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import * as CONFIG from "./config.js";
 
 let scene, camera, renderer, clock, skyLight, sunLight;
-let sunAngle = Math.PI / 4; // Start in morning/afternoon
+let sunAngle = Math.PI / 4;
 let stars;
 
 function initializeScene() {
@@ -46,7 +46,6 @@ function initializeScene() {
 
   window.addEventListener("resize", onWindowResize, false);
 
-  // Return core components needed elsewhere
   return { scene, camera, renderer, clock };
 }
 
@@ -65,7 +64,7 @@ function createStars() {
     if (Math.sqrt(x * x + y * y + z * z) > 1000) {
       starVertices.push(x, y, z);
     } else {
-      i--; // retry
+      i--;
     }
   }
   starGeometry.setAttribute(
@@ -118,12 +117,4 @@ function onWindowResize() {
   }
 }
 
-// Export necessary functions and variables
-export {
-  initializeScene,
-  updateDayNightCycle,
-  scene, // Export scene if other modules need to add objects directly
-  camera,
-  renderer,
-  clock,
-};
+export { initializeScene, updateDayNightCycle, scene, camera, renderer, clock };

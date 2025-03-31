@@ -14,11 +14,7 @@ const AIRCRAFT_ICONS = {
   eurofighter_typhoon: "fa-jet-fighter",
 };
 
-/**
- * Initialize the aircraft selection UI
- */
 export function initializeAircraftUI() {
-  // Get references to existing elements
   aircraftSelectorElement = document.getElementById("aircraft-selector");
   aircraftModalElement = document.getElementById("aircraft-modal");
   selectButtonElement = document.getElementById("aircraft-select-button");
@@ -55,9 +51,6 @@ export function initializeAircraftUI() {
   });
 }
 
-/**
- * Update the aircraft selector UI
- */
 function updateAircraftSelectorUI() {
   if (!aircraftSelectorElement) return;
 
@@ -143,9 +136,6 @@ function updateAircraftSelectorUI() {
   });
 }
 
-/**
- * Generate stat bars for visual display of aircraft stats
- */
 function generateStatBars(statValue, maxBars) {
   const normalizedValue = Math.max(0, Math.min(1, statValue));
   const filledBars = Math.round(normalizedValue * maxBars);

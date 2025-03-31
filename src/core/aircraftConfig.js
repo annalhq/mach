@@ -43,8 +43,7 @@ export const AIRCRAFT_CONFIGS = {
 const defaultAircraft = AIRCRAFT_TYPES.EUROFIGHTER_TYPHOON;
 
 let currentAircraftType =
-  localStorage.getItem("selectedAircraftType") ||
-  defaultAircraft;
+  localStorage.getItem("selectedAircraftType") || defaultAircraft;
 
 if (!AIRCRAFT_CONFIGS[currentAircraftType]) {
   currentAircraftType = AIRCRAFT_TYPES.EUROFIGHTER_TYPHOON;
@@ -67,7 +66,7 @@ export function getCurrentAircraft() {
 export function selectAircraft(aircraftType) {
   if (AIRCRAFT_CONFIGS[aircraftType]) {
     currentAircraftType = aircraftType;
-    // Store the selection in localStorage
+
     localStorage.setItem("selectedAircraftType", aircraftType);
     return true;
   }
